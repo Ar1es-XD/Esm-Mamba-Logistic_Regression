@@ -9,7 +9,7 @@ __pycache__/
 
 # Massive output/embedding files (generated at runtime)
 Outputs/
-cache/
+shared/v_fused_cache/
 
 # Trained model checkpoints (too large for git)
 Results/*.pt
