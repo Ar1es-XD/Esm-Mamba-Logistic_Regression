@@ -1,0 +1,22 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Massive output/embedding files (generated at runtime)
+Outputs/
+cache/
+
+# Trained model checkpoints (too large for git)
+Results/*.pt
+
+# Logs
+*.log
+
+# Mac OS
+.DS_Store
+*.npy
