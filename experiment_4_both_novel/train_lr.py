@@ -54,10 +54,18 @@ def main():
         results = {
             "Train n": 0,
             "Test n": 0,
-            "Test %neut": 0.0,
+            "Test %neutralizing": 0.0,
             "AUROC": 0.0,
-            "AUPRC": 0.0
+            "AUPRC": 0.0,
+            "C": 0.0
         }
+        if os.path.exists('held_out_antibodies.csv'):
+            results["Held-out antibodies"] = 0
+        if os.path.exists('held_out_viruses.csv'):
+            results["Held-out viruses"] = 0
+        if os.path.exists('excluded_pairs.csv'):
+            results["Excluded pairs"] = 0
+            
         with open('results.json', 'w') as f:
             json.dump(results, f, indent=4)
         return
@@ -111,11 +119,24 @@ def main():
     results = {
         "Train n": int(len(X_train)),
         "Test n": int(len(X_test)),
-        "Test %neut": round(test_neut_pct * 100, 2),
+        "Test %neutralizing": round(test_neut_pct * 100, 2),
         "AUROC": round(float(auroc), 4),
-        "AUPRC": round(float(auprc), 4)
+        "AUPRC": round(float(auprc), 4),
+        "C": best_C
     }
     
+    if os.path.exists('held_out_antibodies.csv'):
+        held_out_abs = pd.read_csv('held_out_antibodies.csv')
+        results["Held-out antibodies"] = int(len(held_out_abs))
+        
+    if os.path.exists('held_out_viruses.csv'):
+        held_out_virs = pd.read_csv('held_out_viruses.csv')
+        results["Held-out viruses"] = int(len(held_out_virs))
+        
+    if os.path.exists('excluded_pairs.csv'):
+        excl_pairs = pd.read_csv('excluded_pairs.csv')
+        results["Excluded pairs"] = int(len(excl_pairs))
+        
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)
     print("Results saved to results.json.")

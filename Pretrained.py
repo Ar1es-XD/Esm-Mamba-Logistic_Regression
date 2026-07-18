@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 import torch
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 import esm
 import torch.nn.functional as F
 import os

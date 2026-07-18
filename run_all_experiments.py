@@ -53,9 +53,13 @@ def main():
                     "Experiment": name,
                     "Train n": metrics.get("Train n", 0),
                     "Test n": metrics.get("Test n", 0),
-                    "Test %neut": f"{metrics.get('Test %neut', 0.0):.2f}%",
+                    "Test %neutralizing": f"{metrics.get('Test %neutralizing', 0.0):.2f}%",
                     "AUROC": f"{metrics.get('AUROC', 0.0):.4f}",
-                    "AUPRC": f"{metrics.get('AUPRC', 0.0):.4f}"
+                    "AUPRC": f"{metrics.get('AUPRC', 0.0):.4f}",
+                    "C": metrics.get("C", "N/A"),
+                    "Held-out antibodies": metrics.get("Held-out antibodies", "N/A"),
+                    "Held-out viruses": metrics.get("Held-out viruses", "N/A"),
+                    "Excluded pairs": metrics.get("Excluded pairs", "N/A")
                 })
             except Exception as e:
                 print(f"Failed to read results for {name}: {e}")
@@ -65,9 +69,13 @@ def main():
                 "Experiment": name,
                 "Train n": "N/A",
                 "Test n": "N/A",
-                "Test %neut": "N/A",
+                "Test %neutralizing": "N/A",
                 "AUROC": "N/A",
-                "AUPRC": "N/A"
+                "AUPRC": "N/A",
+                "C": "N/A",
+                "Held-out antibodies": "N/A",
+                "Held-out viruses": "N/A",
+                "Excluded pairs": "N/A"
             })
 
     # Write summary_results.csv at the top level
