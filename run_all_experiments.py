@@ -6,6 +6,7 @@ Runs all 4 self-contained experiments in sequence and aggregates their metrics
 into a top-level summary_results.csv file.
 """
 import os
+import sys
 import json
 import subprocess
 import pandas as pd
@@ -38,7 +39,7 @@ def main():
         # Invoke train_lr.py in its own directory
         # This keeps the execution context fully self-contained inside the experiment folder
         try:
-            subprocess.run(["python3", "train_lr.py"], cwd=folder, check=True)
+            subprocess.run([sys.executable, "train_lr.py"], cwd=folder, check=True)
         except Exception as e:
             print(f"Subprocess failed for {name}: {e}")
             

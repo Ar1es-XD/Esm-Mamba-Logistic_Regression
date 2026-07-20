@@ -1,0 +1,9 @@
+{
+    "Train n": 61219,
+    "Test n": 13511,
+    "Test %neutralizing": 60.38,
+    "AUROC": 0.8537,
+    "AUPRC": 0.9006,
+    "C": 0.001,
+    "Held-out viruses": 541
+}

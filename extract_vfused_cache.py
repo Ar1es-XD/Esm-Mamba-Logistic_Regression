@@ -27,10 +27,10 @@ CACHE_DIR = 'shared/v_fused_cache'
 device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 
 class PairDataset(Dataset):
-    def __init__(self, df, ab_dir, ag_dir):
+    def __init__(self, df, ab_cache, ag_cache):
         self.df = df
-        self.ab_dir = ab_dir
-        self.ag_dir = ag_dir
+        self.ab_cache = ab_cache
+        self.ag_cache = ag_cache
 
     def __len__(self):
         return len(self.df)
@@ -41,12 +41,8 @@ class PairDataset(Dataset):
         ag_id = row['virus_id']
         safe_ab_id = ab_id.replace('/', '_')
 
-        ab_path = os.path.join(self.ab_dir, f"{ab_id}.npy")
-        ag_path = os.path.join(self.ag_dir, f"{ag_id}.npy")
-
-        # Load raw ESM-2 embeddings
-        ab_emb = np.load(ab_path)
-        ag_emb = np.load(ag_path)
+        ab_emb = self.ab_cache[safe_ab_id]
+        ag_emb = self.ag_cache[ag_id]
 
         return ab_id, ag_id, safe_ab_id, torch.FloatTensor(ab_emb), torch.FloatTensor(ag_emb)
 
@@ -100,7 +96,7 @@ def main():
             already_cached += 1
             continue
             
-        ab_path = f"Outputs/Pretrained_HIV/ab/{ab_id}.npy"
+        ab_path = f"Outputs/Pretrained_HIV/ab/{safe_ab_id}.npy"
         ag_path = f"Outputs/Pretrained_HIV/ag/{ag_id}.npy"
         
         if os.path.exists(ab_path) and os.path.exists(ag_path):
@@ -118,11 +114,32 @@ def main():
     valid_df = pd.DataFrame(valid_rows)
     print(f"Remaining pairs to project & cache: {len(valid_df)}")
     
+    # Preload all raw ESM-2 embeddings into RAM to completely avoid slow disk I/O
+    print("Preloading antibody embeddings to RAM...")
+    ab_cache = {}
+    for f in os.listdir('Outputs/Pretrained_HIV/ab'):
+        if f.endswith('.npy') and not f.startswith('.'):
+            name = f[:-4]
+            ab_cache[name] = np.load(os.path.join('Outputs/Pretrained_HIV/ab', f))
+            
+    print("Preloading antigen embeddings to RAM...")
+    ag_cache = {}
+    for f in os.listdir('Outputs/Pretrained_HIV/ag'):
+        if f.endswith('.npy') and not f.startswith('.'):
+            name = f[:-4]
+            ag_cache[name] = np.load(os.path.join('Outputs/Pretrained_HIV/ag', f))
+
     # 5. Run Batched Caching
-    dataset = PairDataset(valid_df, 'Outputs/Pretrained_HIV/ab', 'Outputs/Pretrained_HIV/ag')
-    # Using batch size of 128 and 4 loader subprocesses (optimal for GPU execution)
-    loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=4, pin_memory=True)
+    dataset = PairDataset(valid_df, ab_cache, ag_cache)
+    # Using batch size of 64 and num_workers=0 (optimal for RAM-cached dataset)
+    loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=0, pin_memory=True)
     
+    from concurrent.futures import ThreadPoolExecutor
+    executor = ThreadPoolExecutor(max_workers=16)
+
+    def save_array(path, arr):
+        np.save(path, arr)
+
     extracted_count = 0
     with torch.no_grad():
         for batch_ab_ids, batch_ag_ids, batch_safe_ab_ids, ab_embs, ag_embs in tqdm(loader, desc="Caching v_fused"):
@@ -137,16 +154,18 @@ def main():
             v = model.pool(v)
             v_fused = torch.cat([h.squeeze(-1), v.squeeze(-1)], dim=-1) # (B, 1588)
             
-            # Save vectors to disk
+            # Save vectors to disk in parallel using the thread pool
             v_fused_cpu = v_fused.cpu().numpy()
             for i in range(len(batch_ab_ids)):
                 ab_id = batch_ab_ids[i]
                 ag_id = batch_ag_ids[i]
                 safe_ab_id = batch_safe_ab_ids[i]
                 out_path = os.path.join(CACHE_DIR, f"{safe_ab_id}___{ag_id}.npy")
-                np.save(out_path, v_fused_cpu[i])
+                executor.submit(save_array, out_path, v_fused_cpu[i])
                 extracted_count += 1
                 
+    print("Waiting for all files to be written to disk...")
+    executor.shutdown(wait=True)
     print(f"\nCaching complete! Generated {extracted_count} new vectors.")
 
 if __name__ == '__main__':

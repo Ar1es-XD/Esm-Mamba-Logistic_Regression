@@ -1,0 +1,11 @@
+{
+    "Train n": 34774,
+    "Test n": 7306,
+    "Test %neutralizing": 56.78,
+    "AUROC": 0.711,
+    "AUPRC": 0.7759,
+    "C": 0.001,
+    "Held-out antibodies": 232,
+    "Held-out viruses": 749,
+    "Excluded pairs": 32650
+}

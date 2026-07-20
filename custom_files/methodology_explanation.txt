@@ -1,0 +1,94 @@
+================================================================================
+METHODOLOGY EXPLANATION: EVALUATION PIPELINE AND MATHEMATICAL FORMULATION
+================================================================================
+
+This document details the exact experimental methodology, mathematical equations, 
+data partitions, and training workflows used in the ESM-Mamba + Logistic Regression 
+pipeline.
+
+--------------------------------------------------------------------------------
+1. DATASET CLEANING & BALANCING
+--------------------------------------------------------------------------------
+The dataset is derived from the HIV CATNAP (Covariates Associated with Neutralization 
+Antibody Panels) database.
+* Base Dataset size: 74,730 total interactions.
+* Target Label: Neutralization capability ('neut' column: binary, 1 for 
+  neutralizing, 0 for non-neutralizing).
+* Sequence Extraction: Heavy (heavy_aa) and Light (light_aa) chain sequences 
+  for antibodies, and Env (env_aa) protein sequences for viral variants.
+
+--------------------------------------------------------------------------------
+2. GENERALIZATION BOUNDARY EXPERIMENTS (THE 4 SPLITS)
+--------------------------------------------------------------------------------
+To test the model's capacity to generalize across different evolutionary distances, 
+four independent experiment splits are established:
+
+1) Experiment 1: Random Partition (Control)
+   - Train size: 59,799 pairs | Test size: 14,931 pairs.
+   - Tests interpolation performance when both antibody and antigen families have 
+     been seen in training, but specific pairings are withheld.
+
+2) Experiment 2: Novel Viruses Holdout (Virus-level Generalization)
+   - Train size: 61,219 pairs | Test size: 13,511 pairs (541 held-out viruses).
+   - Evaluates performance against completely unseen viral variants (epitope 
+     generalization).
+
+3) Experiment 3: Novel Antibodies Holdout (Antibody-level Generalization)
+   - Train size: 57,903 pairs | Test size: 16,827 pairs (137 held-out antibodies).
+   - Evaluates performance of completely unseen antibody sequences (paratope 
+     generalization).
+
+4) Experiment 4: Double Holdout (Both Novel Generalization)
+   - Train size: 34,774 pairs | Test size: 7,306 pairs.
+   - Both the antibody and the virus variant in the test set are completely 
+     unseen in the training set. The most challenging benchmark.
+
+--------------------------------------------------------------------------------
+3. EMBEDDING EXTRACTION & FUSION MECHANISM (PHASES A-D)
+--------------------------------------------------------------------------------
+Step 3.1: Sequence Representation (Phase A)
+* ESM-2 representations are extracted from the 6th layer of the 8M-parameter model.
+* For antibodies, heavy (emb_h) and light (emb_l) embeddings are concatenated:
+  X_ab = concat(emb_h, emb_l)  (shape: L_ab x 320)
+* For antigens:
+  X_ag = emb_ag                (shape: L_ag x 320)
+
+Step 3.2: Bilinear Interaction Projection (Phase B)
+* An interaction contact grid C is computed using a learnable projection matrix W:
+  C = X_ab * W * X_ag^T        (shape: L_ab x L_ag)
+  where W is of shape (320 x 320).
+
+Step 3.3: Horizontal and Vertical VMamba Sweeps (Phase C)
+* Horizontal Sweeps: Mamba SSM processes the rows of C sequentially:
+  h = mamba_hor(C)             (shape: L_ab x L_ag)
+* Vertical Sweeps: Mamba SSM processes the columns of C sequentially:
+  v = mamba_ver(C^T)           (shape: L_ag x L_ab)
+
+Step 3.4: Adaptive Pooling & Representation Concatenation (Phase D)
+* Features are pooled along sequence lengths to extract global properties:
+  h_pooled = pool(h)           (shape: L_ab x 1) -> squeeze to (L_ab)
+  v_pooled = pool(v)           (shape: L_ag x 1) -> squeeze to (L_ag)
+* The final fused vector v_fused represents the pair:
+  v_fused = concat(h_pooled, v_pooled)  (shape: L_ab + L_ag = 1588)
+
+--------------------------------------------------------------------------------
+4. REGULARIZED LOGISTIC REGRESSION CLASSIFICATION
+--------------------------------------------------------------------------------
+For classification, L2-regularized Logistic Regression is fitted on top of the 
+projected v_fused representations.
+* Standardization:
+  Features are standardized to zero mean and unit variance:
+  z = (v_fused - mu) / sigma
+* Objective Function (L2 Regularization):
+  Minimize over weight vector w and bias b:
+  Cost(w, b) = C * sum(log(1 + exp(-y_i * (w^T * z_i + b)))) + 0.5 * ||w||_2^2
+  where C is the inverse regularization strength.
+* Cross-Validation & Grid Search:
+  - 5-fold stratified cross-validation is run over the training partition.
+  - Grid search optimizes the parameter C across values:
+    [0.001, 0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
+  - Best C is selected based on validation AUROC.
+* Evaluation Metrics:
+  - AUROC: Area under the Receiver Operating Characteristic curve.
+  - AUPRC: Area under the Precision-Recall curve (Average Precision).
+================================================================================

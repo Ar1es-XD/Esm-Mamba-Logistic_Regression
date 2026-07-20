@@ -1,0 +1,102 @@
+================================================================================
+ESM-MAMBA + LOGISTIC REGRESSION: PIPELINE DOCUMENTATION
+================================================================================
+
+This document chronicles the full end-to-end process, benchmarks, architectural 
+upgrades, and optimizations implemented during this pair programming session.
+
+--------------------------------------------------------------------------------
+1. PHASE 1: ESM-MAMBA PURE BASELINE TRAINING (Main_mentor.py)
+--------------------------------------------------------------------------------
+* Context: Establish baseline performance on the balanced HIV CATNAP dataset.
+* Configuration:
+  - Sequence Truncation: 95th percentile length (Config B: AB=442, AG=875).
+  - Optimizer: Adam, Learning Rate = 0.0001.
+  - Hardware Acceleration: PyTorch Mixed Precision (bfloat16 AMP) on CUDA.
+  - Batching: Micro-batch size 16, Gradient Accumulation 2 (Effective BS = 32).
+  - Validation: Unseen-antibody holdout partition ('ab_block' split).
+* Execution Summary:
+  - Ran for 30 complete epochs (~20.3 hours total runtime).
+  - Average step speed: 0.622s/batch.
+  - Metrics Log: 
+    * Peak Test AUC: 0.8368 (Achieved at Epoch 7, matched at Epoch 10).
+    * Final training loss (Epoch 30): 0.0733.
+    * Post-Epoch 10: Model overfit on train split; Test AUC plateaued around 0.82.
+  - Checkpoints: Rolled checkpoint_epoch_{1-30}.pth to Results/ directory.
+
+--------------------------------------------------------------------------------
+2. PHASE 2: SEQUENCE-BASED PHYSICOCHEMICAL UPGRADE (Main_upgrade_physicochemical.py)
+--------------------------------------------------------------------------------
+* Concept: Concatenate explicit physical properties alongside ESM-2 embeddings.
+* Architectural Integration (Option A):
+  - Extracted 1D physical properties on-the-fly from amino acid letters:
+    * Hydrophobicity: Normalized Kyte-Doolittle scale.
+    * Charge: Net charge at pH 7.0 (R,K=+1; D,E=-1; H=+0.1; others=0).
+    * Polarity: Normalized Grantham Polarity scale.
+  - Appended features along the embedding dimension (increasing dim from 320 to 323).
+  - Added Early Stopping hook with a patience of 5 epochs.
+* Execution Summary:
+  - Exceeded baseline ceiling early, hitting Test AUC 0.8370 in Epoch 4.
+  - Achieved peak Test AUC of 0.8380 at Epoch 9.
+  - Early stopping triggered at Epoch 14 due to validation plateau.
+  - Saved GPU Runtime: 11.4 hours of unnecessary training bypassed.
+  - Average step speed: 0.621s/batch (zero overhead from physical property lookups).
+
+--------------------------------------------------------------------------------
+3. PHASE 3: CLONING & OPTIMIZING THE LOGISTIC REGRESSION PIPELINE
+--------------------------------------------------------------------------------
+* Repository Cloned: 
+  - Source: https://github.com/Ar1es-XD/Esm-Mamba-Logistic_Regression.git
+  - Cloned inside separate working directory: C:\Users\Admin\esm_lr
+* restructred Layout:
+  - Pretrained.py: ESM-2 feature extractor (Phase A).
+  - extract_vfused_cache.py: Caches 1588-dim bilinear Mamba sweeps (Phases B-D).
+  - experiment_{1-4}_*/: Splits and train_lr.py Logistic Regression fitters.
+  - run_all_experiments.py: Master execution runner.
+
+* Setup & Critical Optimizations Implemented:
+
+  1) Output Symlink / Junction Creation:
+     - Re-running Pretrained.py (Step 1) would waste ~30 minutes of GPU compute.
+     - Created a directory junction from C:\Users\Admin\esm_lr\Outputs to C:\Users\Admin\esm\Outputs.
+     - Enabled immediate access to the 74,730 pre-extracted ESM-2 sequences.
+
+  2) Codebase Slash-character Bugfix:
+     - Found that files containing slashes in their IDs (e.g. antibody "VRC01/02") failed to load or were silently skipped because the code searched for raw slashes on disk.
+     - Modified extract_vfused_cache.py paths to use safe_ab_id (replacing '/' with '_').
+
+  3) Memory Embedding Caching:
+     - The original loader read .npy files from disk 256 times per batch inside PairDataset.
+     - This caused a massive I/O bottleneck, yielding a slow speed of 28.9s/batch (~4.7 hours total run).
+     - Rewrote extract_vfused_cache.py to load all 685 antibodies and 2,705 antigens into RAM at startup (consuming only ~3.7 GB of memory).
+     - Set DataLoader num_workers=0 to bypass multi-process IPC serialization overhead.
+
+  4) Parallel Feature Writing via ThreadPoolExecutor:
+     - Sequential calls to np.save() blocked GPU execution loops.
+     - Implemented concurrent.futures.ThreadPoolExecutor to dispatch file writing asynchronously to 16 CPU threads.
+     - Batch execution speed improved to 1.62s/batch (17.8x speedup), reducing total extraction time to ~30 minutes.
+
+  5) Subprocess Cross-platform Compatibility:
+     - Replaced hardcoded "python3" calls in run_all_experiments.py with sys.executable to automatically inherit the current python virtual environment on Windows.
+
+--------------------------------------------------------------------------------
+4. FINAL LOGISTIC REGRESSION SUMMARY RESULTS
+--------------------------------------------------------------------------------
+Below is the compiled summary of metrics across all four generalization boundaries
+(saved in summary_results.csv):
+
+      Experiment  Train n  Test n Test %neutralizing  AUROC  AUPRC     C Held-out antibodies Held-out viruses Excluded pairs
+          Random    59799   14931             58.88% 0.8642 0.9054 0.001                 N/A              N/A            N/A
+   Novel viruses    61219   13511             60.38% 0.8537 0.9006 0.001                 N/A              541            N/A
+Novel antibodies    57903   16827             59.67% 0.8007 0.8387 0.001                 137              N/A            N/A
+      Both novel    34774    7306             56.78% 0.7110 0.7759 0.001                 232              749          32650
+
+* Observations:
+  - Random split (control) yields the highest scores (AUROC = 0.8642, AUPRC = 0.9054).
+  - Novel viruses generalize very well (AUROC = 0.8537), showing that ESM-Mamba 
+    features are robust to unseen viral envelope variants.
+  - Novel antibodies are harder to generalize to (AUROC = 0.8007), suggesting 
+    paratope variation presents a steeper learning curve than epitope variation.
+  - The "Both novel" double-holdout is the most challenging benchmark (AUROC = 0.7110),
+    setting a strong baseline for L2-regularized linear classifiers.
+================================================================================
