@@ -1,0 +1,9 @@
+{
+    "Train n": 57903,
+    "Test n": 16827,
+    "Test %neutralizing": 59.67,
+    "AUROC": 0.8007,
+    "AUPRC": 0.8387,
+    "C": 0.001,
+    "Held-out antibodies": 137
+}
