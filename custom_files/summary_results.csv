@@ -1,5 +1,0 @@
-Experiment,Train n,Test n,Test %neutralizing,AUROC,AUPRC,C,Held-out antibodies,Held-out viruses,Excluded pairs
-Random,59799,14931,58.88%,0.8642,0.9054,0.001,N/A,N/A,N/A
-Novel viruses,61219,13511,60.38%,0.8537,0.9006,0.001,N/A,541,N/A
-Novel antibodies,57903,16827,59.67%,0.8007,0.8387,0.001,137,N/A,N/A
-Both novel,34774,7306,56.78%,0.7110,0.7759,0.001,232,749,32650

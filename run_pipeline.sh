@@ -38,7 +38,7 @@ if [ -f "Outputs/Pretrained_HIV/ab/.done" ] && [ -f "Outputs/Pretrained_HIV/ag/.
     echo "✓ ESM-2 embeddings already generated (skipping Step 1)"
 else
     echo "▶ Step 1: Generating ESM-2 embeddings (GPU-bound, ~10-30 min)..."
-    python3 Pretrained.py
+    python3 shared/Pretrained.py
     touch Outputs/Pretrained_HIV/ab/.done
     touch Outputs/Pretrained_HIV/ag/.done
     echo "✓ ESM-2 embeddings generated"

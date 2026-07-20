@@ -9,12 +9,15 @@ Saves them to shared/v_fused_cache/ as `<antibody_id>___<virus_id>.npy`.
 Optimized with a batched DataLoader to run fast on CPU/MPS.
 """
 import os
+import sys
 import json
 import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
+
+sys.path.insert(0, 'shared')
 from Models import MambaCross
 
 # Config
@@ -51,7 +54,7 @@ def main():
     os.makedirs(CACHE_DIR, exist_ok=True)
     
     # 1. Load Param_Model.json
-    with open('Param_Model.json', 'r') as f:
+    with open('shared/Param_Model.json', 'r') as f:
         param = json.load(f)
         
     # 2. Determine thresholds from original data files

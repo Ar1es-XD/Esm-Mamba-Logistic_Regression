@@ -1,0 +1,5 @@
+Experiment,Train n,Test n,Test %neutralizing,AUROC,AUPRC,C,Held-out antibodies,Held-out viruses,Excluded pairs
+Random,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+Novel viruses,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+Novel antibodies,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+Both novel,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A

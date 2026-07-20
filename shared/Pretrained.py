@@ -8,9 +8,10 @@ import esm
 import torch.nn.functional as F
 import os
 
-data_root = 'Data/HIV'
-ab_info_path = '%s/antibody.csv'%data_root
-ag_info_path = '%s/antigen.csv'%data_root
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+data_root = os.path.join(PROJECT_ROOT, 'Data', 'HIV')
+ab_info_path = os.path.join(data_root, 'antibody.csv')
+ag_info_path = os.path.join(data_root, 'antigen.csv')
 
 ab_info = pd.read_csv(ab_info_path, index_col=None, header=0)
 ag_info = pd.read_csv(ag_info_path, index_col=None, header=0)
@@ -29,7 +30,7 @@ thres_ag = int(np.percentile(len_ag, 100))
 print(f"Max AB length (H+L): {thres_ab}")
 print(f"Max AG length: {thres_ag}")
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 def alphabet_coding(data_list, is_antibody, maxlen, save_dir):
     """
@@ -99,7 +100,7 @@ ab_data = [x for x in ab_data if (len(str(x[1])) + len(str(x[2]))) <= thres_ab]
 ag_data = [x for x in ag_data if len(str(x[1])) <= thres_ag]
 
 print("Extracting Antigen Embeddings...")
-alphabet_coding(ag_data, is_antibody=False, maxlen=thres_ag, save_dir='Outputs/Pretrained_HIV/ag')
+alphabet_coding(ag_data, is_antibody=False, maxlen=thres_ag, save_dir=os.path.join(PROJECT_ROOT, 'Outputs', 'Pretrained_HIV', 'ag'))
 
 print("Extracting Antibody Embeddings (Heavy + Light)...")
-alphabet_coding(ab_data, is_antibody=True, maxlen=thres_ab, save_dir='Outputs/Pretrained_HIV/ab')
+alphabet_coding(ab_data, is_antibody=True, maxlen=thres_ab, save_dir=os.path.join(PROJECT_ROOT, 'Outputs', 'Pretrained_HIV', 'ab'))
