@@ -49,7 +49,7 @@ The performance of L2 Logistic Regression on cached $v_{\text{fused}}$ vectors a
 
 A clean, modular visualization engine is located in `/visualizations/`. All figures are rendered at **300 DPI (PNG)** for high-resolution graphics and as **vector PDFs** for LaTeX integration.
 
-### Figure Inventory:
+### Figure Inventory & Embedded Gallery:
 
 | Figure # | Script | Output Files | Description |
 | :---: | :--- | :--- | :--- |
@@ -66,6 +66,42 @@ To run all figure generation scripts sequentially:
 ```bash
 python3 visualizations/run_all_visualizations.py
 ```
+
+---
+
+### 🖼️ Thesis Visualizations Gallery
+
+#### Figure 4.1 — Dataset Composition & Target Class Distribution
+![Figure 4.1](visualizations/figures/fig4_1_dataset_distribution.png)
+*Figure 4.1: Target class balance ($58.9\%$ neutralizing) and representation counts for top antibodies and viral strains.*
+
+#### Figure 4.2 — Generalization Partitioning & Data Split Breakdown
+![Figure 4.2](visualizations/figures/fig4_2_partition_splits.png)
+*Figure 4.2: Train, Test, and Excluded pair counts across the four experiment splits.*
+
+#### Figure 4.3 — Sequence Length Distribution of Antibodies and Antigens
+![Figure 4.3](visualizations/figures/fig4_3_sequence_lengths.png)
+*Figure 4.3: Sequence length distribution for Heavy+Light antibody chains and gp120/gp160 antigens.*
+
+#### Figure 4.4 — Principal Component Analysis (PCA) of ESM-2 Sequence Embeddings
+![Figure 4.4](visualizations/figures/fig4_4_esm_embedding_pca.png)
+*Figure 4.4: 2D PCA projections of 320-dimensional mean-pooled ESM-2 embeddings for antibodies and antigens.*
+
+#### Figure 5.1 — Dimensionality Reduction (PCA & t-SNE) of 1,588-dim $v_{\text{fused}}$ Vectors
+![Figure 5.1](visualizations/figures/fig5_1_fused_feature_pca.png)
+*Figure 5.1: Low-dimensional feature projections of fused biophysical interaction representations colored by class.*
+
+#### Figure 6.1 — Benchmark Performance Comparison Across Generalization Boundaries
+![Figure 6.1](visualizations/figures/fig6_1_benchmark_performance.png)
+*Figure 6.1: Comparative AUROC and AUPRC performance scores across all four experiment settings.*
+
+#### Figure 6.2 — Generalization Degradation Curve & Entity Holdout Asymmetry
+![Figure 6.2](visualizations/figures/fig6_2_generalization_degradation.png)
+*Figure 6.2: Degradation of predictive power across biological settings highlighting antibody vs virus asymmetry.*
+
+#### Figure 6.3 — Model Diagnostic Profiles (ROC, PR, Calibration, & Confidence)
+![Figure 6.3](visualizations/figures/fig6_3_model_diagnostics.png)
+*Figure 6.3: Comprehensive model diagnostics showing ROC curves, PR curves, calibration, and prediction confidence distributions.*
 
 ---
 
