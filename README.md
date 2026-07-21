@@ -45,6 +45,30 @@ The performance of L2 Logistic Regression on cached $v_{\text{fused}}$ vectors a
 
 ---
 
+## 📈 Thesis Data Visualization Suite
+
+A clean, modular visualization engine is located in `/visualizations/`. All figures are rendered at **300 DPI (PNG)** for high-resolution graphics and as **vector PDFs** for LaTeX integration.
+
+### Figure Inventory:
+
+| Figure # | Script | Output Files | Description |
+| :---: | :--- | :--- | :--- |
+| **Figure 4.1** | [`fig1_dataset_distribution.py`](visualizations/fig1_dataset_distribution.py) | `fig4_1_dataset_distribution.png / .pdf` | Class balance (58.9% neutralizing) and entity frequency distribution |
+| **Figure 4.2** | [`fig2_partition_splits.py`](visualizations/fig2_partition_splits.py) | `fig4_2_partition_splits.png / .pdf` | Train ($n_{\text{train}}$), Test ($n_{\text{test}}$), and Excluded pair counts per split |
+| **Figure 4.3** | [`fig3_sequence_lengths.py`](visualizations/fig3_sequence_lengths.py) | `fig4_3_sequence_lengths.png / .pdf` | Sequence length distributions for Heavy+Light antibodies and antigens |
+| **Figure 4.4** | [`fig4_esm_embedding_pca.py`](visualizations/fig4_esm_embedding_pca.py) | `fig4_4_esm_embedding_pca.png / .pdf` | 2D PCA projection of raw 320-dim ESM-2 sequence embeddings |
+| **Figure 5.1** | [`fig5_fused_feature_pca.py`](visualizations/fig5_fused_feature_pca.py) | `fig5_1_fused_feature_pca.png / .pdf` | PCA & t-SNE projections of 1,588-dim $v_{\text{fused}}$ biophysical vectors |
+| **Figure 6.1** | [`fig6_benchmark_performance.py`](visualizations/fig6_benchmark_performance.py) | `fig6_1_benchmark_performance.png / .pdf` | Benchmark performance comparison (AUROC & AUPRC across 4 splits) |
+| **Figure 6.2** | [`fig7_generalization_degradation.py`](visualizations/fig7_generalization_degradation.py) | `fig6_2_generalization_degradation.png / .pdf` | Generalization degradation curve and antibody-vs-virus asymmetry gap |
+| **Figure 6.3** | [`fig8_model_diagnostics.py`](visualizations/fig8_model_diagnostics.py) | `fig6_3_model_diagnostics.png / .pdf` | ROC curves, Precision-Recall curves, Calibration, & Confidence profiles |
+
+To run all figure generation scripts sequentially:
+```bash
+python3 visualizations/run_all_visualizations.py
+```
+
+---
+
 ## 📂 Repository Layout
 
 ```
@@ -65,34 +89,22 @@ esm-up/
 │   ├── cleaned_dataset.csv   #   Base dataset (all 74,730 interaction pairs)
 │   └── v_fused_cache/        #   Cached 1,588-dim feature representations
 │
+├── visualizations/           # 📈 Modular thesis visualization scripts & figures
+│   ├── fig1_dataset_distribution.py
+│   ├── fig2_partition_splits.py
+│   ├── fig3_sequence_lengths.py
+│   ├── fig4_esm_embedding_pca.py
+│   ├── fig5_fused_feature_pca.py
+│   ├── fig6_benchmark_performance.py
+│   ├── fig7_generalization_degradation.py
+│   ├── fig8_model_diagnostics.py
+│   ├── run_all_visualizations.py
+│   └── figures/              #   Exported 300 DPI PNG & vector PDF figure artifacts
+│
 ├── experiment_1_random/      # Exp 1: Random Split (59,799 train / 14,931 test)
-│   ├── train.csv & test.csv
-│   ├── train_lr.py           # Standalone Logistic Regression trainer
-│   ├── results.json          # Experiment metrics artifact
-│   └── README.md
-│
 ├── experiment_2_novel_viruses/ # Exp 2: Novel Viruses (61,219 train / 13,511 test)
-│   ├── train.csv & test.csv
-│   ├── held_out_viruses.csv  # 541 held-out viral strain IDs
-│   ├── train_lr.py           # Standalone Logistic Regression trainer
-│   ├── results.json          # Experiment metrics artifact
-│   └── README.md
-│
 ├── experiment_3_novel_antibodies/ # Exp 3: Novel Antibodies (57,903 train / 16,827 test)
-│   ├── train.csv & test.csv
-│   ├── held_out_antibodies.csv # 137 held-out antibody IDs
-│   ├── train_lr.py           # Standalone Logistic Regression trainer
-│   ├── results.json          # Experiment metrics artifact
-│   └── README.md
-│
 ├── experiment_4_both_novel/  # Exp 4: Both Novel (34,774 train / 7,306 test)
-│   ├── train.csv & test.csv
-│   ├── excluded_pairs.csv    # 32,650 single-novel overlap pairs
-│   ├── held_out_antibodies.csv & held_out_viruses.csv
-│   ├── train_lr.py           # Standalone Logistic Regression trainer
-│   ├── results.json          # Experiment metrics artifact
-│   └── README.md
-│
 ├── extract_vfused_cache.py   # Computes & caches Phase B-D v_fused vectors
 ├── run_all_experiments.py    # Master runner (fits LR across all 4 experiments)
 ├── run_pipeline.sh           # End-to-end orchestration shell script

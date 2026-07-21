@@ -91,38 +91,71 @@ def main():
         random_state=SEED,
         n_jobs=-1
     )
+    # Measure training time
+    import time
+    t0_train = time.time()
     clf.fit(X_train, y_train)
+    t_train = time.time() - t0_train
     
     best_C = float(clf.C_[0])
-    print(f"Best C selected: {best_C}")
+    print(f"Best C selected: {best_C} (Training time: {t_train:.2f}s)")
     
-    # Evaluate
+    # Evaluate & measure inference time
+    t0_inf = time.time()
     y_prob = clf.predict_proba(X_test)[:, 1]
+    t_inf = time.time() - t0_inf
     
     # Calculate complementary metrics: AUROC and AUPRC
     auroc = roc_auc_score(y_test, y_prob)
     precision, recall, _ = precision_recall_curve(y_test, y_prob)
     auprc = auc(recall, precision)
     
-    # Calculate supplementary metrics for console feedback
+    # Calculate supplementary metrics
     y_pred = (y_prob >= 0.5).astype(int)
     acc = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     
-    print("\n--- Evaluation Results ---")
-    print(f"AUROC:  {auroc:.4f}")
-    print(f"AUPRC:  {auprc:.4f}")
-    print(f"Accuracy: {acc:.4f}")
-    print(f"F1 Score: {f1:.4f}")
+    from sklearn.metrics import precision_score, recall_score, matthews_corrcoef, confusion_matrix
+    prec = precision_score(y_test, y_pred, zero_division=0)
+    rec = recall_score(y_test, y_pred, zero_division=0)
+    mcc = matthews_corrcoef(y_test, y_pred)
+    cm = confusion_matrix(y_test, y_pred).tolist()
     
-    # Save results
+    print("\n--- Evaluation Results ---")
+    print(f"AUROC:     {auroc:.4f}")
+    print(f"AUPRC:     {auprc:.4f}")
+    print(f"Accuracy:  {acc:.4f}")
+    print(f"Precision: {prec:.4f}")
+    print(f"Recall:    {rec:.4f}")
+    print(f"F1 Score:  {f1:.4f}")
+    print(f"MCC:       {mcc:.4f}")
+    print(f"Fit Time:  {t_train:.2f}s | Inf Time: {t_inf:.4f}s")
+    
+    # Save predictions CSV
+    df_test = pd.read_csv('test.csv')
+    df_test['y_true'] = y_test
+    df_test['y_prob'] = y_prob
+    df_test['y_pred'] = y_pred
+    df_test['confidence'] = np.where(y_pred == 1, y_prob, 1 - y_prob)
+    df_test.to_csv('predictions.csv', index=False)
+    print("Saved test predictions to predictions.csv")
+    
+    # Save results json
     results = {
         "Train n": int(len(X_train)),
         "Test n": int(len(X_test)),
         "Test %neutralizing": round(test_neut_pct * 100, 2),
         "AUROC": round(float(auroc), 4),
         "AUPRC": round(float(auprc), 4),
-        "C": best_C
+        "Accuracy": round(float(acc), 4),
+        "Precision": round(float(prec), 4),
+        "Recall": round(float(rec), 4),
+        "F1": round(float(f1), 4),
+        "MCC": round(float(mcc), 4),
+        "C": best_C,
+        "Training_Time_sec": round(t_train, 3),
+        "Inference_Time_sec": round(t_inf, 4),
+        "Confusion_Matrix": cm
     }
     
     if os.path.exists('held_out_antibodies.csv'):

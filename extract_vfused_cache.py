@@ -27,7 +27,7 @@ np.random.seed(SEED)
 
 DATA_ROOT = 'shared'
 CACHE_DIR = 'shared/v_fused_cache'
-device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class PairDataset(Dataset):
     def __init__(self, df, ab_cache, ag_cache):
