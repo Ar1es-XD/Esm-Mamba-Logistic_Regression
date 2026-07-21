@@ -24,7 +24,6 @@ A modular computational framework for extracting **1,588-dimensional ESM-Mamba b
 - [🖼️ Thesis Visualizations Gallery](#️-thesis-visualizations-gallery)
 - [📂 Repository Directory Structure](#-repository-directory-structure)
 - [⚡ Quick Start & Reproduction Guide](#-quick-start--reproduction-guide)
-- [🎓 Thesis Citation & References](#-thesis-citation--references)
 
 ---
 
@@ -259,20 +258,3 @@ Fits 5-fold cross-validated L2 Logistic Regression across all four experimental 
 python3 visualizations/run_all_visualizations.py
 ```
 Renders all 8 publication figures as 300 DPI PNGs and vector PDFs in `visualizations/figures/`.
-
----
-
-## 🎓 Thesis Citation & References
-
-If you use this benchmark pipeline, dataset partitions, or visualization engine in your work, please cite:
-
-```bibtex
-@thesis{esm_mamba_logistic_regression_2025,
-  author    = {Chinmay},
-  title     = {Evaluating ESM-Mamba Biophysical Interaction Representations for Zero-Shot HIV Neutralization Prediction},
-  year      = {2025},
-  type      = {Undergraduate Thesis},
-  institution = {Department of Computer Science / Bioengineering},
-  url       = {https://github.com/Ar1es-XD/Esm-Mamba-Logistic_Regression}
-}
-```
