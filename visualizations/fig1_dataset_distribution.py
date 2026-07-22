@@ -37,7 +37,8 @@ def generate_figure(dataset_path, output_dir):
     # 1. Class Distribution
     class_counts = df['neut'].value_counts()
     class_pcts = df['neut'].value_counts(normalize=True) * 100
-    labels = ['Non-Neutralizing (0)', 'Neutralizing (1)']
+    labels = ['Neutralizing (1)' if idx == 1 else 'Non-Neutralizing (0)' for idx in class_counts.index]
+    colors = ['#d95f02' if idx == 1 else '#2b5c8f' for idx in class_counts.index]
     
     bars = axes[0].bar(labels, class_counts.values, color=colors, width=0.55, edgecolor='black', linewidth=0.8)
     axes[0].set_title('A. Neutralization Target Class Distribution', pad=12, fontweight='bold')

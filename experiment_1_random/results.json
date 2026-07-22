@@ -1,8 +1,8 @@
 {
-    "Train n": 115,
-    "Test n": 27,
-    "Test %neutralizing": 18.52,
-    "AUROC": 0.6727,
-    "AUPRC": 0.3944,
-    "C": 100.0
+    "Train n": 59799,
+    "Test n": 14931,
+    "Test %neutralizing": 58.88,
+    "AUROC": 0.8642,
+    "AUPRC": 0.9054,
+    "C": 0.001
 }
